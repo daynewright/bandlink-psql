@@ -12,27 +12,21 @@ DECLARE
 BEGIN
     -- Check if a conversation between sender and receiver exists
     IF EXISTS (
-        SELECT 1
-        FROM public.users_conversation uc1
-        JOIN public.users_conversation uc2 ON uc1.conversation_id = uc2.conversation_id
-        WHERE uc1.user_id = p_sender_id
-          AND uc2.user_id = p_receiver_id
+        SELECT id
+        FROM public.conversations
+        WHERE (user_id_a = p_sender_id AND user_id_b = p_receiver_id)
+           OR (user_id_a = p_receiver_id AND user_id_b = p_sender_id)
     ) THEN
         -- Conversation exists, get its ID
-        SELECT uc1.conversation_id INTO v_conversation_id
-        FROM public.users_conversation uc1
-        JOIN public.users_conversation uc2 ON uc1.conversation_id = uc2.conversation_id
-        WHERE uc1.user_id = p_sender_id
-          AND uc2.user_id = p_receiver_id;
+        SELECT id INTO v_conversation_id
+        FROM public.conversations
+        WHERE (user_id_a = p_sender_id AND user_id_b = p_receiver_id)
+           OR (user_id_a = p_receiver_id AND user_id_b = p_sender_id);
     ELSE
         -- Conversation does not exist, create a new one
-        INSERT INTO public.conversations (event_id)
-        VALUES (NULL)
+        INSERT INTO public.conversations (user_id_a, user_id_b, conversation_type)
+        VALUES (p_sender_id, p_receiver_id, 'USER')
         RETURNING id INTO v_conversation_id;
-
-        -- Add users to users_conversation table
-        INSERT INTO public.users_conversation (conversation_id, user_id)
-        VALUES (v_conversation_id, p_sender_id), (v_conversation_id, p_receiver_id);
     END IF;
 
     -- Insert the message

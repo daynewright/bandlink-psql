@@ -17,8 +17,8 @@ BEGIN
 
     -- If a conversation doesn't exist, create one
     IF v_conversation_id IS NULL THEN
-        INSERT INTO public.conversations (event_id)
-        VALUES (p_event_id)
+        INSERT INTO public.conversations (event_id, conversation_type)
+        VALUES (p_event_id, 'EVENT')
         RETURNING id INTO v_conversation_id;
     END IF;
 
